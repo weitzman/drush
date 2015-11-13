@@ -11,7 +11,8 @@
  * listed below in order of precedence:
  *
  * 1.  Drupal site folder (e.g. sites/{default|example.com}/drushrc.php).
- * 2.  Drupal /drush and sites/all/drush folders.
+ * 2.  Drupal /drush and sites/all/drush folders, or the /drush folder
+ *       in the directory above the Drupal root.
  * 3.  In any location, as specified by the --config (-c) option.
  * 4.  User's .drush folder (i.e. ~/.drush/drushrc.php).
  * 5.  System wide configuration folder (e.g. /etc/drush/drushrc.php).
@@ -58,7 +59,7 @@
  * affects the loading of Drush configuration files.
  */
 
-// Specify a particular multisite.
+// Specify the base_url that should be used when generating links
 # $options['l'] = 'http://example.com/subdir';
 
 // Specify your Drupal core base directory (useful if you use symlinks).
@@ -76,6 +77,7 @@
  */
 # $options['shell-aliases']['pull'] = '!git pull'; // We've all done it.
 # $options['shell-aliases']['pulldb'] = '!git pull && drush updatedb';
+# $options['shell-aliases']['cpull'] = 'config-pull @example.prod @self --label=vcs';
 # $options['shell-aliases']['noncore'] = 'pm-list --no-core';
 # $options['shell-aliases']['wipe'] = 'cache-clear all';
 # $options['shell-aliases']['unsuck'] = 'pm-disable -y overlay,dashboard';
@@ -143,14 +145,6 @@
  * semi-colon (;) on Windows.
  */
 # $options['alias-path'] = array('/path/to/aliases','/path2/to/more/aliases');
-
-/**
- * Specify the folder where 'sql-sync' should store persistent dump files.
- * Keeping the dump files around improves the performance of rsync when the
- * database is rsync'ed to a remote system.  If a dump directory is not
- * specified, then 'sql-sync' will store dumps in temporary files.
- */
-# $options['dump-dir'] = '/path/to/dumpdir';
 
 /**
  * Specify the filename and path where 'sql-dump' should store backups of
