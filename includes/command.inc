@@ -697,12 +697,7 @@ function drush_redispatch_get_options() {
   unset($cli_context['php-options']);
   // cli overrides and command specific
   $options = $cli_context + drush_get_context('specific');
-  $global_option_list = drush_get_global_options(FALSE);
-  foreach (drush_get_context('alias') as $key => $value) {
-    if (array_key_exists($key, $global_option_list)) {
-      $options[$key] = $value;
-    }
-  }
+  $option_keys = drush_get_global_options(FALSE);
 
   $options = array_diff_key($options, array_flip(drush_sitealias_site_selection_keys()));
   unset($options['command-specific']);
@@ -711,15 +706,17 @@ function drush_redispatch_get_options() {
   // in order for any option that is directly related to the current command
   $command = drush_parse_command();
   if (is_array($command)) {
-    foreach ($command['options'] as $key => $value) {
-      // Strip leading --
-      $key = ltrim($key, '-');
-      $value = drush_get_option($key);
-      if (isset($value)) {
-        $options[$key] = $value;
-      }
+    $option_keys += $command['options'];
+  }
+  foreach (array_keys($option_keys) as $key) {
+    // Strip leading --
+    $key = ltrim($key, '-');
+    $value = drush_get_option($key);
+    if (isset($value)) {
+      $options[$key] = $value;
     }
   }
+
   // If --bootstrap-to-first-arg is specified, do not
   // pass it along to remote commands.
   unset($options['bootstrap-to-first-arg']);
