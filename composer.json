@@ -27,11 +27,18 @@
     "drush.php",
     "drush.complete.sh"
   ],
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/weitzman/drupal-code-generator"
+    }
+  ],
   "require": {
     "php": ">=5.6.0",
     "psr/log": "~1.0",
     "psy/psysh": "~0.6",
     "league/container": "~2",
+    "chi-teck/drupal-code-generator": "dev-development",
     "consolidation/robo": "dev-master",
     "symfony/config": "~2.2",
     "consolidation/annotated-command": "~2",

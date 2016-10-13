@@ -7,13 +7,14 @@
 
 use Consolidation\AnnotatedCommand\Hooks\HookManager;
 use Drush\Log\LogLevel;
-use League\Container\Container;
 use Robo\Contract\BuilderAwareInterface;
-use Robo\Robo;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Filesystem\Filesystem;
+use DrupalCodeGenerator\Commands;
+use DrupalCodeGenerator\GeneratorDiscovery;
 
 /**
  * The main Drush function.
@@ -201,6 +202,9 @@ function drush_preflight_prepare() {
   // or do much else until after this is done.
   $container = drush_init_dependency_injection_container();
 
+  // Add our DCG commands to the application.
+  drush_init_dcg_commands($container);
+
   // Add our core annotation command files to the application.
   drush_init_annotation_commands($container);
   drush_init_application_global_options($container);
@@ -245,6 +249,8 @@ function drush_preflight_prepare() {
  * Set up our dependency injection container.
  *
  * The Drupal6 boot service is needed in order to show the D6 deprecation message.
+ *
+ * @return \League\Container\Container
  */
 function drush_init_dependency_injection_container($input = null, $output = null) {
   // Create default input and output objects if they were not provided
@@ -359,6 +365,35 @@ function drush_init_application_global_options($container) {
       );
     }
   }
+}
+
+/**
+ * Discover the DCG commands and register them with the $application.
+ *
+ * @param \League\Container\Container $container
+ */
+function drush_init_dcg_commands($container) {
+  /** @var \Symfony\Component\Console\Application $application */
+  $application = $container->get('application');
+  // Setup target directories.
+  $commands_directories[] = DCG_ROOT . '/src/Commands';
+  $twig_directories[] = DCG_ROOT . '/src/Templates';
+
+  // Discover DCG-provided generators.
+  $discovery = new GeneratorDiscovery($commands_directories, $twig_directories, new Filesystem());
+  $generators = $discovery->getGenerators();
+  // Replace colons with dashes because no shift key, and Drush muscle memory.
+  foreach ($generators as $generator) {
+    $new = str_replace(':', '-', $generator->getName());
+    $generator->setName($new);
+  }
+
+  // Create navigation command.
+  $navigation = new Commands\Navigation();
+  $navigation->init($generators);
+
+  $application->addCommands($generators);
+  $application->add($navigation);
 }
 
 function drush_init_annotation_commands($container) {
