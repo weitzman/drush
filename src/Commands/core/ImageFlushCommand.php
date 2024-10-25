@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Drush\Commands\core;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drush\Attributes as CLI;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drush\Commands\AutowireTrait;
-use Drush\Commands\Validators;
 use Drush\Style\DrushStyle;
 use Drush\Utils\StringUtils;
+use InvalidArgumentException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -22,7 +22,6 @@ use Symfony\Component\Console\Output\OutputInterface;
     description: 'Flush all derived images for a given style.',
     aliases: ['if', 'image-flush']
 )]
-#[CLI\ValidateModulesEnabled(modules: ['image'])]
 final class ImageFlushCommand extends Command
 {
     use AutowireTrait;
@@ -30,7 +29,8 @@ final class ImageFlushCommand extends Command
     public const NAME = 'image:flush';
 
     public function __construct(
-        private readonly EntityTypeManagerInterface $entityTypeManager
+        private readonly EntityTypeManagerInterface $entityTypeManager,
+        private readonly ModuleHandlerInterface $moduleHandler,
     ) {
         parent::__construct();
     }
@@ -69,13 +69,33 @@ final class ImageFlushCommand extends Command
         if ($input->getOption('all')) {
             $input->setArgument('style_names', array_keys($this->entityTypeManager->getStorage('image_style')->loadMultiple()));
         }
-        Validators::entityLoad(StringUtils::csvToArray($input->getArgument('style_names')), 'image_style');
+
+        $this->validateModulesEnabled(['image']);
+        $this->validateEntityLoad(StringUtils::csvToArray($input->getArgument('style_names')), 'image_style');
 
         $ids = StringUtils::csvToArray($input->getArgument('style_names'));
         foreach ($this->entityTypeManager->getStorage('image_style')->loadMultiple($ids) as $style_name => $style) {
             $style->flush();
             $io->success("Image style $style_name flushed");
         }
-        return static::SUCCESS;
+        return self::SUCCESS;
+    }
+
+    protected function validateEntityLoad(array $ids, string $entity_type_id): void
+    {
+        $loaded = $this->entityTypeManager->getStorage($entity_type_id)->loadMultiple($ids);
+        if ($missing = array_diff($ids, array_keys($loaded))) {
+            $msg = dt('Unable to load the !type: !str', ['!type' => $entity_type_id, '!str' => implode(', ', $missing)]);
+            throw new \InvalidArgumentException($msg);
+        }
+    }
+
+    protected function validateModulesEnabled(array $modules): void
+    {
+        $missing = array_filter($modules, fn($module) => !$this->moduleHandler->moduleExists($module));
+        if ($missing) {
+            $message = dt('The following modules are required: !modules', ['!modules' => implode(', ', $missing)]);
+            throw new InvalidArgumentException($message);
+        }
     }
 }

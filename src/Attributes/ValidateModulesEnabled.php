@@ -7,8 +7,10 @@ namespace Drush\Attributes;
 use Attribute;
 use Consolidation\AnnotatedCommand\CommandData;
 use Consolidation\AnnotatedCommand\CommandError;
+use JetBrains\PhpStorm\Deprecated;
 
-#[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD)]
+#[Deprecated(replacement: 'Copy \Drush\Commands\core\ImageFlushCommand::validateModulesEnabled into command and call during execute()')]
+#[Attribute(Attribute::TARGET_METHOD)]
 class ValidateModulesEnabled extends ValidatorBase implements ValidatorInterface
 {
     /**

@@ -10,8 +10,8 @@ use Consolidation\AnnotatedCommand\CommandError;
 use Drush\Utils\StringUtils;
 use JetBrains\PhpStorm\Deprecated;
 
-#[Deprecated(replacement: 'Directly call \Drush\Commands\Validators::entityLoad during execute()')]
-#[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD)]
+#[Deprecated(replacement: 'Copy \Drush\Commands\core\ImageFlushCommand::validateEntityLoad into command and call during execute()')]
+#[Attribute(Attribute::TARGET_METHOD)]
 class ValidateEntityLoad extends ValidatorBase implements ValidatorInterface
 {
     /**
