@@ -26,7 +26,6 @@ use Symfony\Component\Console\Output\OutputInterface;
     aliases: ['sql-dump']
 )]
 #[CLI\Bootstrap(level: DrupalBootLevels::MAX, max_level: DrupalBootLevels::CONFIGURATION)]
-#[CLI\OptionsetTableSelection]
 final class SqlDumpCommand extends Command
 {
     use AutowireTrait;
@@ -58,6 +57,7 @@ final class SqlDumpCommand extends Command
             ->setFieldLabels(['path' => 'Path']);
         $this->configureFormatter(PropertyList::class, $formatterOptions);
         OptionSets::sql($this);
+        OptionSets::tableSelection($this);
     }
 
     public function execute(InputInterface $input, OutputInterface $output): int

@@ -7,8 +7,10 @@ namespace Drush\Attributes;
 use Attribute;
 use Consolidation\AnnotatedCommand\Parser\CommandInfo;
 use Drush\Commands\DrushCommands;
+use JetBrains\PhpStorm\Deprecated;
 
-#[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD)]
+#[Deprecated(replacement: 'Call \Drush\Commands\OptionSets::tableSelection during configure()')]
+#[Attribute(Attribute::TARGET_METHOD)]
 class OptionsetTableSelection
 {
     public static function handle(\ReflectionAttribute $attribute, CommandInfo $commandInfo)
