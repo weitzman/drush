@@ -7,6 +7,8 @@ namespace Unish;
 use Drush\Commands\core\ImageCommands;
 use Drush\Commands\core\ImageFlushCommand;
 use Drush\Commands\pm\PmCommands;
+use Drush\Drush;
+use Symfony\Component\Console\Tester\CommandTester;
 
 /**
  * Tests image-flush command
@@ -36,8 +38,12 @@ class ImageTest extends UnishIntegrationTestCase
         $this->assertFileExists($thumbnail);
 
         // Test that "drush image-flush thumbnail" deletes derivatives created by the thumbnail image style.
-        $this->drush(ImageFlushCommand::NAME, [$style_name], ['all' => null]);
+        // @todo We probably need a new base class for CommandTester tests. How should it be structured?
+        $command = Drush::getApplication()->find(ImageFlushCommand::NAME);
+        $commandTester = new CommandTester($command);
+        $commandTester->execute(['style_names' => $style_name]);
         $this->assertFileDoesNotExist($thumbnail);
+        // @todo note stdin testing documented at https://github.com/symfony/symfony/issues/37835
 
         // Check that "drush image-flush --all" deletes all image styles by creating two different ones and testing its
         // existence afterwards.
