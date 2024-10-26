@@ -7,8 +7,8 @@ namespace Unish;
 use Drush\Commands\core\ImageCommands;
 use Drush\Commands\core\ImageFlushCommand;
 use Drush\Commands\pm\PmCommands;
-use Drush\Drush;
-use Symfony\Component\Console\Tester\CommandTester;
+use Symfony\Component\Console\Tester\ApplicationTester;
+use Unish\Controllers\RuntimeController;
 
 /**
  * Tests image-flush command
@@ -38,10 +38,11 @@ class ImageTest extends UnishIntegrationTestCase
         $this->assertFileExists($thumbnail);
 
         // Test that "drush image-flush thumbnail" deletes derivatives created by the thumbnail image style.
-        // @todo We probably need a new base class for CommandTester tests. How should it be structured?
-        $command = Drush::getApplication()->find(ImageFlushCommand::NAME);
-        $commandTester = new CommandTester($command);
-        $commandTester->execute(['style_names' => $style_name]);
+        // @todo Perhaps create a $this->getApplication() method with the line below.
+        // @todo Simplify RuntimeController once all commands are using a Tester? Its singleton is still useful.
+        $application = RuntimeController::instance()->application($this->webroot(), [$this->getDrush()]);
+        $applicationTester = new ApplicationTester($application);
+        $applicationTester->run([ImageFlushCommand::NAME, 'style_names' => $style_name]);
         $this->assertFileDoesNotExist($thumbnail);
         // @todo note stdin testing documented at https://github.com/symfony/symfony/issues/37835
 
