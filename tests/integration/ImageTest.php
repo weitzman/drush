@@ -7,19 +7,29 @@ namespace Unish;
 use Drush\Commands\core\ImageCommands;
 use Drush\Commands\core\ImageFlushCommand;
 use Drush\Commands\pm\PmCommands;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Console\Tester\ApplicationTester;
-use Unish\Controllers\RuntimeController;
 
 /**
  * Tests image-flush command
  *
  * @group commands
  */
-class ImageTest extends UnishIntegrationTestCase
+class ImageTest extends UnishApplicationTesterTestCase
 {
     public function testImage()
     {
-        $this->drush(PmCommands::INSTALL, ['image']);
+        // We aren't testing pm:install so don't use ApplicationTester yet.
+        // This is the recommended approach from https://symfony.com/doc/current/console/calling_commands.html
+        $input = new ArrayInput([
+            'command' => PmCommands::INSTALL,
+            'modules' => ['image'],
+        ]);
+        $output = new NullOutput();
+        $application = $this->getApplication();
+        $returnCode = $application->doRun($input, $output);
+
         $logo = 'core/misc/menu-expanded.png';
         $styles_dir = $this->webroot() . '/sites/default/files/styles/';
         $thumbnail = $styles_dir . 'thumbnail/public/' . $logo;
@@ -38,9 +48,6 @@ class ImageTest extends UnishIntegrationTestCase
         $this->assertFileExists($thumbnail);
 
         // Test that "drush image-flush thumbnail" deletes derivatives created by the thumbnail image style.
-        // @todo Perhaps create a $this->getApplication() method with the line below.
-        // @todo Simplify RuntimeController once all commands are using a Tester? Its singleton is still useful.
-        $application = RuntimeController::instance()->application($this->webroot(), [$this->getDrush()]);
         $applicationTester = new ApplicationTester($application);
         $applicationTester->run([ImageFlushCommand::NAME, 'style_names' => $style_name]);
         $this->assertFileDoesNotExist($thumbnail);
