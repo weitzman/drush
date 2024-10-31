@@ -7,8 +7,6 @@ namespace Unish;
 use Drush\Commands\core\ImageCommands;
 use Drush\Commands\core\ImageFlushCommand;
 use Drush\Commands\pm\PmCommands;
-use Symfony\Component\Console\Input\ArrayInput;
-use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Console\Tester\ApplicationTester;
 
 /**
@@ -20,15 +18,7 @@ class ImageTest extends UnishApplicationTesterTestCase
 {
     public function testImage()
     {
-        // We aren't testing pm:install so don't use ApplicationTester.
-        // This is the recommended approach from https://symfony.com/doc/current/console/calling_commands.html
-        $input = new ArrayInput([
-            'command' => PmCommands::INSTALL,
-            'modules' => ['image'],
-        ]);
-        $output = new NullOutput();
-        $returnCode = $this->getApplication()->doRun($input, $output);
-        // $this->drush(PmCommands::INSTALL, ['image']);
+        $this->drush(PmCommands::INSTALL, ['image']);
 
         $logo = 'core/misc/menu-expanded.png';
         $styles_dir = $this->webroot() . '/sites/default/files/styles/';
