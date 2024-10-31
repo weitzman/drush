@@ -7,6 +7,8 @@ namespace Unish;
 use Drush\Commands\core\ImageCommands;
 use Drush\Commands\core\ImageFlushCommand;
 use Drush\Commands\pm\PmCommands;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Console\Tester\ApplicationTester;
 
 /**
@@ -18,17 +20,15 @@ class ImageTest extends UnishApplicationTesterTestCase
 {
     public function testImage()
     {
-        $this->drush(PmCommands::INSTALL, ['image']);
-        $application = $this->getApplication();
         // We aren't testing pm:install so don't use ApplicationTester.
         // This is the recommended approach from https://symfony.com/doc/current/console/calling_commands.html
-        // We can't actually do this until pm:install moves from an AnnotatedCommand.
-//        $input = new ArrayInput([
-//            'command' => PmCommands::INSTALL,
-//            'modules' => ['image'],
-//        ]);
-//        $output = new NullOutput();
-//        $returnCode = $application->doRun($input, $output);
+        $input = new ArrayInput([
+            'command' => PmCommands::INSTALL,
+            'modules' => ['image'],
+        ]);
+        $output = new NullOutput();
+        $returnCode = $this->getApplication()->doRun($input, $output);
+        // $this->drush(PmCommands::INSTALL, ['image']);
 
         $logo = 'core/misc/menu-expanded.png';
         $styles_dir = $this->webroot() . '/sites/default/files/styles/';
@@ -49,7 +49,7 @@ class ImageTest extends UnishApplicationTesterTestCase
         $this->assertFileExists($thumbnail);
 
         // Test that "drush image-flush thumbnail" deletes derivatives created by the thumbnail image style.
-        $applicationTester = new ApplicationTester($application);
+        $applicationTester = new ApplicationTester($this->getApplication());
         $applicationTester->run([ImageFlushCommand::NAME, 'style_names' => $style_name, '--no-interaction' => true]);
         $output = $applicationTester->getDisplay();
         $this->assertFileDoesNotExist($thumbnail);
