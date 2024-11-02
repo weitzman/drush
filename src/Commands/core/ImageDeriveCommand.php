@@ -6,8 +6,6 @@ namespace Drush\Commands\core;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drush\Attributes as CLI;
-use Drush\Boot\DrupalBootLevels;
 use Drush\Commands\AutowireTrait;
 use Drush\Style\DrushStyle;
 use InvalidArgumentException;
@@ -22,7 +20,6 @@ use Symfony\Component\Console\Output\OutputInterface;
     description: 'Create an image derivative',
     aliases: ['id', 'image-derive']
 )]
-#[CLI\Bootstrap(level: DrupalBootLevels::FULL)]
 final class ImageDeriveCommand extends Command
 {
     use AutowireTrait;

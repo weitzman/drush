@@ -170,6 +170,8 @@ class DependencyInjection
         // Alias the dispatcher service that is defined in \Robo\Robo::configureContainer.
         Robo::addShared($container, EventDispatcherInterface::class, 'eventDispatcher');  // For autowiring
 
+        // Alias the config service that is defined in \Robo\Robo::configureContainer.
+        Robo::addShared($container, DrushConfig::class, 'config');  // For autowiring
 
         // Add our own callback to the hook manager
         $hookManager = $container->get('hookManager');
