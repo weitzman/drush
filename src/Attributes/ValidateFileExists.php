@@ -7,7 +7,9 @@ namespace Drush\Attributes;
 use Attribute;
 use Consolidation\AnnotatedCommand\CommandData;
 use Consolidation\AnnotatedCommand\CommandError;
+use JetBrains\PhpStorm\Deprecated;
 
+#[Deprecated(replacement: 'Copy \Drush\Commands\core\ImageDeriveCommand::validateFileExists into command and call during execute()')]
 #[Attribute(Attribute::TARGET_METHOD)]
 class ValidateFileExists extends ValidatorBase implements ValidatorInterface
 {

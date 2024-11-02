@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Unish;
 
-use Drush\Commands\core\ImageCommands;
+use Drush\Commands\core\ImageDeriveCommand;
 use Drush\Commands\core\ImageFlushCommand;
 use Drush\Commands\pm\PmCommands;
 use Symfony\Component\Console\Tester\ApplicationTester;
 
 /**
- * Tests image-flush command
+ * Tests image:flush and image:derive commands.
  *
  * @group commands
  */
@@ -35,7 +35,7 @@ class ImageTest extends UnishApplicationTesterTestCase
 
         // Test that "drush image-derive" works.
         $style_name = 'thumbnail';
-        $this->drush(ImageCommands::DERIVE, [$style_name, $logo]);
+        $this->drush(ImageDeriveCommand::NAME, [$style_name, $logo]);
         $this->assertFileExists($thumbnail);
 
         // Test that "drush image-flush thumbnail" deletes derivatives created by the thumbnail image style.
@@ -47,9 +47,9 @@ class ImageTest extends UnishApplicationTesterTestCase
 
         // Check that "drush image-flush --all" deletes all image styles by creating two different ones and testing its
         // existence afterwards.
-        $this->drush(ImageCommands::DERIVE, ['thumbnail', $logo]);
+        $this->drush(ImageDeriveCommand::NAME, ['thumbnail', $logo]);
         $this->assertFileExists($thumbnail);
-        $this->drush(ImageCommands::DERIVE, ['medium', $logo]);
+        $this->drush(ImageDeriveCommand::NAME, ['medium', $logo]);
         $this->assertFileExists($medium);
         $this->drush(ImageFlushCommand::NAME, [], ['all' => null]);
         $this->assertFileDoesNotExist($thumbnail);

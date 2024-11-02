@@ -66,7 +66,7 @@ final class SqlDumpCommand extends Command
         $this->writeFormattedOutput($input, $output, $data);
         return self::SUCCESS;
     }
-    
+
     protected function doExecute(InputInterface $input, OutputInterface $output): PropertyList
     {
         $sql = SqlBase::create($input->getOptions());
