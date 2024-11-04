@@ -98,7 +98,6 @@ final class ConfigSetCommand extends Command
             if (!$simulate) {
                 $config->save();
             }
-            return self::SUCCESS;
         } else {
             $confirmed = false;
             if ($config->isNew() && $io->confirm(dt('!name config does not exist. Do you want to create a new config object?', ['!name' => $config_name]))) {
@@ -110,8 +109,8 @@ final class ConfigSetCommand extends Command
             }
             if ($confirmed && !$simulate) {
                 $config->set($key, $data)->save();
-                return self::SUCCESS;
             }
         }
+        return self::SUCCESS;
     }
 }

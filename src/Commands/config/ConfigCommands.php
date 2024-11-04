@@ -43,6 +43,7 @@ final class ConfigCommands extends DrushCommands implements StdinAwareInterface
 
     const INTERACT_CONFIG_NAME = 'interact-config-name';
     const VALIDATE_CONFIG_NAME = 'validate-config-name';
+    #[Deprecated(reason: 'Use ConfigGetCommand::NAME')]
     const GET = 'config:get';
     const SET = 'config:set';
     const EDIT = 'config:edit';
@@ -80,29 +81,6 @@ final class ConfigCommands extends DrushCommands implements StdinAwareInterface
     public function getImportTransformer(): ImportStorageTransformer
     {
         return $this->importStorageTransformer;
-    }
-
-    /**
-     * Display a config value, or a whole configuration object.
-     */
-    #[CLI\Command(name: self::GET, aliases: ['cget','config-get'])]
-    #[CLI\Argument(name: 'config_name', description: 'The config object name, for example <info>system.site</info>.')]
-    #[CLI\Argument(name: 'key', description: 'The config key, for example <info>page.front</info>. Optional.')]
-    #[CLI\Option(name: 'source', description: 'The config storage source to read.')]
-    #[CLI\Option(name: 'include-overridden', description: 'Apply module and settings.php overrides to values.')]
-    #[CLI\Usage(name: 'drush config:get system.site', description: 'Displays the system.site config.')]
-    #[CLI\Usage(name: 'drush config:get system.site page.front', description: 'Gets system.site:page.front value.')]
-    #[CLI\Complete(method_name_or_callable: 'configComplete')]
-    #[CLI\ValidateConfigName()]
-    #[CLI\InteractConfigName()]
-    public function get($config_name, $key = '', $options = ['format' => 'yaml', 'source' => 'active', 'include-overridden' => false])
-    {
-        // Displaying overrides only applies to active storage.
-        $factory = $this->getConfigFactory();
-        $config = $options['include-overridden'] ? $factory->get($config_name) : $factory->getEditable($config_name);
-        $value = $config->get($key);
-        // @todo If the value is TRUE (for example), nothing gets printed. Is this yaml formatter's fault?
-        return $key ? ["$config_name:$key" => $value] : $value;
     }
 
     /**
