@@ -37,7 +37,7 @@ class ApplicationFactory
         $application->setAutoExit(false);
 
         $generators = $this->discover();
-        $application->addCommands($generators);
+        $application->addCommands($application->dispatch(new GeneratorInfoAlter($generators))->generators);
         // Hide default Symfony console commands.
         foreach (['help', 'list', 'completion', '_complete'] as $name) {
             $application->get($name)->setHidden(true);
