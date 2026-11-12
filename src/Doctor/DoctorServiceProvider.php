@@ -43,7 +43,7 @@ class DoctorServiceProvider implements ServiceProviderInterface
         $classes = self::getClassesEarly();
         if (isset($modules['system'])) {
             // Drupal is installed, so add classes that require it.
-            $classes = array_merge($classes, self::getClassesStandard());
+            $classes = array_merge($classes, self::getClassesStandard($modules));
             // The dr-only updatedb commands need core's DatabaseUpdate (11.5+).
             if ($container->hasDefinition(DatabaseUpdate::class)) {
                 $classes[] = UpdatedbCommand::class;
@@ -74,14 +74,15 @@ class DoctorServiceProvider implements ServiceProviderInterface
         );
     }
 
-    public static function getClassesStandard(): array
+    /**
+     * @param array $modules
+     *   The container.modules parameter, keyed by module name.
+     */
+    public static function getClassesStandard(array $modules): array
     {
         $core = [
             BrowseCommand::class,
-            ImageDeriveCommand::class,
-            ImageFlushCommand::class,
             RouteCommand::class,
-            WorkspacePublishCommand::class,
         ];
 
         $entity = [
@@ -97,8 +98,19 @@ class DoctorServiceProvider implements ServiceProviderInterface
             FindClasses::findClasses('Drush\\Commands\\role'),
             FindClasses::findClasses('Drush\\Commands\\state'),
             FindClasses::findClasses('Drush\\Commands\\user'),
-            FindClasses::findClasses('Drush\\Commands\\watchdog'),
         );
+
+        // These commands need a module that is not always installed.
+        if (isset($modules['dblog'])) {
+            $classes = array_merge($classes, FindClasses::findClasses('Drush\\Commands\\watchdog'));
+        }
+        if (isset($modules['image'])) {
+            $classes[] = ImageDeriveCommand::class;
+            $classes[] = ImageFlushCommand::class;
+        }
+        if (isset($modules['workspaces'])) {
+            $classes[] = WorkspacePublishCommand::class;
+        }
 
         $skip = [
             CacheRebuildCommand::class,
