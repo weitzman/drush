@@ -87,12 +87,19 @@ class DoctorServiceProvider implements ServiceProviderInterface
             $entity,
             FindClasses::findClasses('Drush\\Commands\\cache'),
             FindClasses::findClasses('Drush\\Commands\\queue'),
-            FindClasses::findClasses('Drush\\Commands\\role'),
             FindClasses::findClasses('Drush\\Commands\\state'),
-            FindClasses::findClasses('Drush\\Commands\\user'),
         );
 
-        // These commands need a module that is not always installed.
+        // These commands need a module that is not always installed. The user
+        // module is also absent while site:install is still running and in
+        // kernel tests that enable only system.
+        if (isset($modules['user'])) {
+            $classes = array_merge(
+                $classes,
+                FindClasses::findClasses('Drush\\Commands\\role'),
+                FindClasses::findClasses('Drush\\Commands\\user'),
+            );
+        }
         if (isset($modules['dblog'])) {
             $classes = array_merge($classes, FindClasses::findClasses('Drush\\Commands\\watchdog'));
         }
