@@ -1,0 +1,94 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Drush\Doctor\Commands;
+
+use Drupal\Core\DrupalKernelInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+
+/**
+ * Runs under dr only. Drush keeps its own deploy.
+ *
+ * @internal
+ */
+#[AsCommand(
+    name: self::NAME,
+    description: 'Run several commands after performing a code deployment.',
+    usages: ['deploy --no-interaction'],
+)]
+final class DeployCommand
+{
+    use StringTranslationTrait;
+
+    public const string NAME = 'deploy';
+
+    /**
+     * The commands to run, in order.
+     */
+    private const array STEPS = [
+        UpdatedbCommand::NAME,
+        'config:import',
+        self::REBUILD,
+        DeployHookCommand::NAME,
+        'cache:warm',
+    ];
+
+    /**
+     * Not run as a command: core's cache:rebuild boots a second kernel and
+     * points \Drupal at its container, which leaves the commands that follow
+     * with a kernel that Drupal no longer uses. Caches are flushed on the
+     * running kernel instead.
+     */
+    private const string REBUILD = 'cache:rebuild';
+
+    public function __construct(
+        #[Autowire(service: 'kernel')]
+        protected DrupalKernelInterface $kernel,
+    ) {
+    }
+
+    public function __invoke(InputInterface $input, OutputInterface $output, Application $application): int
+    {
+        $io = new SymfonyStyle($input, $output);
+        // Checked up front so a deployment is not left half done.
+        if ($missing = array_filter(self::STEPS, fn(string $name): bool => $name !== self::REBUILD && !$application->has($name))) {
+            $io->error((string) $this->t('deploy needs these commands, which are not available: @names', ['@names' => implode(', ', $missing)]));
+            return Command::FAILURE;
+        }
+
+        foreach (self::STEPS as $name) {
+            $io->section($name);
+            $container = $this->kernel->getContainer();
+            if ($name === self::REBUILD) {
+                drupal_flush_all_caches($this->kernel);
+                $code = Command::SUCCESS;
+            } else {
+                $stepInput = new ArrayInput(['command' => $name]);
+                $stepInput->setInteractive($input->isInteractive());
+                $code = $application->doRun($stepInput, $output);
+            }
+            if ($code !== Command::SUCCESS) {
+                $io->error((string) $this->t('@name failed. Deployment stopped.', ['@name' => $name]));
+                return $code;
+            }
+            // Later commands must come from the container the step left
+            // behind, not the one this command was built from.
+            if ($this->kernel->getContainer() !== $container) {
+                $application->setCommandLoader($this->kernel->getContainer()->get('console.command_loader'));
+                $application->setDispatcher($this->kernel->getContainer()->get('event_dispatcher'));
+            }
+        }
+
+        $io->success((string) $this->t('Deployment complete.'));
+        return Command::SUCCESS;
+    }
+}

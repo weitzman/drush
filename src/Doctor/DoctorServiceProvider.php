@@ -21,6 +21,10 @@ use Drush\Commands\entity\EntityDeleteCommand;
 use Drush\Commands\entity\EntitySaveCommand;
 use Drush\Commands\state\StateGetCommand;
 use Drush\Commands\user\UserLoginCommand;
+use Drush\Doctor\Commands\DeployCommand;
+use Drush\Doctor\Commands\DeployHookCommand;
+use Drush\Doctor\Commands\DeployHookStatusCommand;
+use Drush\Doctor\Commands\DeployMarkCompleteCommand;
 use Drush\Doctor\Commands\UpdatedbCommand;
 use Drush\Doctor\Commands\UpdatedbStatusCommand;
 use Grasmash\YamlCli\Command\GetValueCommand;
@@ -44,10 +48,14 @@ class DoctorServiceProvider implements ServiceProviderInterface
         if (isset($modules['system'])) {
             // Drupal is installed, so add classes that require it.
             $classes = array_merge($classes, self::getClassesStandard($modules));
+            $classes[] = DeployHookCommand::class;
+            $classes[] = DeployHookStatusCommand::class;
+            $classes[] = DeployMarkCompleteCommand::class;
             // The dr-only updatedb commands need core's DatabaseUpdate (11.5+).
             if ($container->hasDefinition(DatabaseUpdate::class)) {
                 $classes[] = UpdatedbCommand::class;
                 $classes[] = UpdatedbStatusCommand::class;
+                $classes[] = DeployCommand::class;
             }
         }
 
