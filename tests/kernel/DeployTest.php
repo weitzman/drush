@@ -34,6 +34,12 @@ class DeployTest extends KernelTestBase
 {
     protected static $modules = ['system', 'user', 'woot'];
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->installConfig(['system']);
+    }
+
     public function testStatus(): void
     {
         $display = $this->runCommand(new DeployHookStatusCommand($this->kernel()))->getDisplay();
@@ -102,38 +108,58 @@ class DeployTest extends KernelTestBase
     }
 
     /**
-     * The other commands deploy runs are stand-ins that record their call.
+     * updatedb and cache:warm are stand-ins that record their call.
      */
     public function testDeploy(): void
     {
         $this->container->get('state')->set('woot_deploy_pass', true);
+        $this->exportConfig();
+        $this->container->get('config.storage.sync')->write('system.site', ['slogan' => 'Imported'] + $this->config('system.site')->getRawData());
         $calls = [];
         $application = $this->application($calls);
 
         $tester = $this->runCommand($application->find(DeployCommand::NAME));
         $display = $tester->getDisplay();
-        $this->assertSame(['updatedb', 'config:import', 'cache:warm'], $calls);
+        $this->assertSame(['updatedb', 'cache:warm'], $calls);
+        $this->assertStringContainsString('update system.site', $display);
+        $this->assertSame('Imported', $this->config('system.site')->get('slogan'));
         $this->assertSame([], $this->pending());
         // Deploy hooks run after the config import and the cache rebuild.
-        $this->assertLessThan(strpos($display, 'Deploy hook started: woot_deploy_a'), strpos($display, 'cache:rebuild'));
+        $this->assertLessThan(strpos($display, 'Deploy hook started: woot_deploy_a'), strpos($display, 'cache rebuild'));
         $this->assertStringContainsString('Deployment complete.', $display);
     }
 
     public function testDeployStopsOnFailure(): void
     {
+        $this->exportConfig();
         $calls = [];
         $application = $this->application($calls);
 
         // woot_deploy_failing() throws, so deploy:hook fails.
         $tester = $this->runCommand($application->find(DeployCommand::NAME), expected: Command::FAILURE);
-        $this->assertSame(['updatedb', 'config:import'], $calls);
+        $this->assertSame(['updatedb'], $calls);
+        $this->assertStringContainsString('There are no changes to import.', $tester->getDisplay());
         $this->assertStringContainsString('deploy:hook failed. Deployment stopped.', $tester->getDisplay());
 
         $calls = [];
-        $application = $this->application($calls, ['config:import' => 3]);
+        $application = $this->application($calls, ['updatedb' => 3]);
         $this->runCommand($application->find(DeployCommand::NAME), expected: 3);
-        $this->assertSame(['updatedb', 'config:import'], $calls);
+        $this->assertSame(['updatedb'], $calls);
         $this->assertCount(1, $this->pending());
+    }
+
+    /**
+     * An empty sync directory is rejected, and nothing runs after it.
+     */
+    public function testDeployImportFails(): void
+    {
+        $calls = [];
+        $application = $this->application($calls);
+
+        $tester = $this->runCommand($application->find(DeployCommand::NAME), expected: Command::FAILURE);
+        $this->assertSame(['updatedb'], $calls);
+        $this->assertStringContainsString('config import failed. Deployment stopped.', $tester->getDisplay());
+        $this->assertCount(3, $this->pending());
     }
 
     public function testDeployMissingCommand(): void
@@ -143,7 +169,7 @@ class DeployTest extends KernelTestBase
         $application->addCommand(new DeployHookCommand($this->kernel()));
 
         $tester = $this->runCommand($application->find(DeployCommand::NAME), expected: Command::FAILURE);
-        $this->assertMatchesRegularExpression('/not available: updatedb,\s+config:import, cache:warm/', $tester->getDisplay());
+        $this->assertMatchesRegularExpression('/not available: updatedb,\s+cache:warm/', $tester->getDisplay());
         $this->assertCount(3, $this->pending());
     }
 
@@ -160,7 +186,7 @@ class DeployTest extends KernelTestBase
         $application = new Application();
         $application->addCommand(new DeployCommand($this->kernel()));
         $application->addCommand(new DeployHookCommand($this->kernel()));
-        foreach (['updatedb', 'config:import', 'cache:warm'] as $name) {
+        foreach (['updatedb', 'cache:warm'] as $name) {
             $application->addCommand((new Command($name))->setCode(function () use (&$calls, $name, $exitCodes): int {
                 $calls[] = $name;
                 return $exitCodes[$name] ?? Command::SUCCESS;
@@ -179,6 +205,14 @@ class DeployTest extends KernelTestBase
         $this->assertSame($expected, $tester->execute($input, ['interactive' => false]), $tester->getDisplay());
         $this->container = $this->kernel()->getContainer();
         return $tester;
+    }
+
+    /**
+     * Makes the sync directory match the active configuration.
+     */
+    protected function exportConfig(): void
+    {
+        $this->copyConfig($this->container->get('config.storage'), $this->container->get('config.storage.sync'));
     }
 
     protected function kernel(): DrupalKernelInterface
