@@ -1,0 +1,52 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Drush\Doctor\Commands\sql;
+
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Attribute\Option;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Output\OutputInterface;
+
+/**
+ * Runs under dr only. Drush keeps its own sql:connect.
+ *
+ * The command reads nothing but core's Database registry, so it needs no
+ * services and works as soon as settings.php declares a connection.
+ *
+ * @internal
+ */
+#[AsCommand(
+    name: self::NAME,
+    description: 'Print a string for connecting to the database.',
+    usages: [
+        '$(dr sql:connect) < example.sql',
+        'eval (dr sql:connect) < example.sql',
+        'sql:connect --extra=--skip-column-names',
+        'sql:connect --db-url=mysql://root:pass@127.0.0.1/drupal',
+    ],
+    help: 'For PostgreSQL the password is not part of the string; psql reads it from PGPASSFILE or ~/.pgpass.',
+)]
+final class SqlConnectCommand
+{
+    use SqlTrait;
+
+    public const string NAME = 'sql:connect';
+
+    public function __invoke(
+        OutputInterface $output,
+        #[Option('Add custom options to the connect string (e.g. --extra=--skip-column-names)')]
+        ?string $extra = null,
+        #[Option('The DB connection key if using multiple connections in settings.php.')]
+        string $database = 'default',
+        #[Option('The name of a target within the specified database connection.')]
+        string $target = 'default',
+        #[Option('A database URL such as mysql://root:pass@localhost:3306/dbname, used instead of the site\'s settings.', name: 'db-url')]
+        ?string $dbUrl = null,
+    ): int {
+        $info = $this->connectionInfo($database, $target, $dbUrl);
+        $output->writeln($this->connectString($info, $extra), OutputInterface::OUTPUT_RAW);
+        return Command::SUCCESS;
+    }
+}
