@@ -25,6 +25,8 @@ use Symfony\Component\Console\Output\OutputInterface;
         'eval (dr sql:connect) < example.sql',
         'sql:connect --extra=--skip-column-names',
         'sql:connect --db-url=mysql://root:pass@127.0.0.1/drupal',
+        '$(dr sql:connect) -e "SELECT * FROM users LIMIT 5;"',
+        'dr php:eval --format=json "return \\Drupal::service(\'database\')->query(\'SELECT * FROM users LIMIT 5\')->fetchAll()"',
     ],
     help: 'For PostgreSQL the password is not part of the string; psql reads it from PGPASSFILE or ~/.pgpass.',
 )]
