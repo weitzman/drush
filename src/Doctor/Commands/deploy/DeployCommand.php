@@ -23,8 +23,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  */
 #[AsCommand(
     name: self::NAME,
-    description: 'Run several commands after performing a code deployment.',
-    usages: ['deploy --no-interaction'],
+    description: 'Run several commands after performing a code deployment. The commands run without prompting.',
 )]
 final class DeployCommand
 {
@@ -74,7 +73,8 @@ final class DeployCommand
                 $code = Command::SUCCESS;
             } else {
                 $stepInput = new ArrayInput(['command' => $name]);
-                $stepInput->setInteractive($input->isInteractive());
+                // A deployment is not the place to answer prompts.
+                $stepInput->setInteractive(false);
                 $code = $application->doRun($stepInput, $output);
             }
             if ($code !== Command::SUCCESS) {
