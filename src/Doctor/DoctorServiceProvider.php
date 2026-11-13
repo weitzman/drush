@@ -10,6 +10,10 @@ use Drupal\Core\Image\Image;
 use Drupal\Core\Update\DatabaseUpdate;
 use Drush\Commands\cache\CacheRebuildCommand;
 use Drush\Commands\cache\CacheTagsCommand;
+use Drush\Commands\config\ConfigDeleteCommand;
+use Drush\Commands\config\ConfigGetCommand;
+use Drush\Commands\config\ConfigSetCommand;
+use Drush\Commands\config\ConfigStatusCommand;
 use Drush\Commands\core\BrowseCommand;
 use Drush\Commands\core\ImageCommands;
 use Drush\Commands\core\ImageDeriveCommand;
@@ -97,6 +101,14 @@ class DoctorServiceProvider implements ServiceProviderInterface
             RouteCommand::class,
         ];
 
+        // The other config commands are not converted yet.
+        $config = [
+            ConfigDeleteCommand::class,
+            ConfigGetCommand::class,
+            ConfigSetCommand::class,
+            ConfigStatusCommand::class,
+        ];
+
         $entity = [
             EntitySaveCommand::class,
             EntityDeleteCommand::class,
@@ -110,6 +122,7 @@ class DoctorServiceProvider implements ServiceProviderInterface
 
         $classes = array_merge(
             $core,
+            $config,
             $entity,
             $deploy,
             FindClasses::findClasses('Drush\\Commands\\cache'),
