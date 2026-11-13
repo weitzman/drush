@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Unish;
 
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Database\Database;
 use Drupal\KernelTests\KernelTestBase;
 use Drush\Doctor\Commands\sql\SqlConnectCommand;
@@ -35,6 +36,17 @@ class SqlConnectTest extends KernelTestBase
     {
         $display = $this->connect(['--db-url' => 'mysql://u:p@h:3307/db'])->getDisplay();
         $this->assertMatchesRegularExpression("/^(mysql|mariadb) --user=u --password=p --database=db --host=h --port=3307\n$/", $display);
+    }
+
+    public function testFormat(): void
+    {
+        $info = Database::getConnectionInfo()['default'];
+        $json = json_decode($this->connect(['--format' => 'json'])->getDisplay(), true, flags: JSON_THROW_ON_ERROR);
+        $this->assertSame('sqlite', $json['driver']);
+        $this->assertSame($info['database'], $json['database']);
+
+        $yaml = Yaml::decode($this->connect(['--format' => 'yaml', '--db-url' => 'mysql://u:p@h:3307/db'])->getDisplay());
+        $this->assertSame(['driver' => 'mysql', 'username' => 'u', 'password' => 'p', 'host' => 'h', 'database' => 'db', 'port' => 3307], array_intersect_key($yaml, array_flip(['driver', 'username', 'password', 'host', 'database', 'port'])));
     }
 
     public function testPgsqlUrl(): void
