@@ -101,7 +101,6 @@ class DoctorServiceProvider implements ServiceProviderInterface
             RouteCommand::class,
         ];
 
-        // The other config commands are not converted yet.
         $config = [
             ConfigDeleteCommand::class,
             ConfigGetCommand::class,
