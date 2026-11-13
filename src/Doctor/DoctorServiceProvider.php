@@ -48,9 +48,6 @@ class DoctorServiceProvider implements ServiceProviderInterface
         if (isset($modules['system'])) {
             // Drupal is installed, so add classes that require it.
             $classes = array_merge($classes, self::getClassesStandard($modules));
-            $classes[] = DeployHookCommand::class;
-            $classes[] = DeployHookStatusCommand::class;
-            $classes[] = DeployMarkCompleteCommand::class;
             // The dr-only updatedb commands need core's DatabaseUpdate (11.5+).
             if ($container->hasDefinition(DatabaseUpdate::class)) {
                 $classes[] = UpdatedbCommand::class;
@@ -98,9 +95,16 @@ class DoctorServiceProvider implements ServiceProviderInterface
             EntityDeleteCommand::class,
         ];
 
+        $deploy = [
+            DeployHookCommand::class,
+            DeployHookStatusCommand::class,
+            DeployMarkCompleteCommand::class,
+        ];
+
         $classes = array_merge(
             $core,
             $entity,
+            $deploy,
             FindClasses::findClasses('Drush\\Commands\\cache'),
             FindClasses::findClasses('Drush\\Commands\\queue'),
             FindClasses::findClasses('Drush\\Commands\\state'),
