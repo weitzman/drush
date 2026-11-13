@@ -51,7 +51,7 @@ class DoctorServiceProvider implements ServiceProviderInterface
         if (isset($modules['system'])) {
             // Drupal is installed, so add classes that require it.
             $classes = array_merge($classes, self::getClassesStandard($modules));
-            // Core has its own config:import after 12.0.
+            // Core has its own config:import after 12.1.
             if (!class_exists(CoreConfigImportCommand::class) && $container->hasDefinition(ConfigImporterFactory::class)) {
                 $classes[] = ConfigImportCommand::class;
             }
