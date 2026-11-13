@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drush\Doctor\Commands;
+namespace Drush\Doctor\Commands\deploy;
 
 use Drupal\Core\DrupalKernelInterface;
 use Symfony\Component\Console\Attribute\AsCommand;

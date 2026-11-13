@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Drush\Doctor\Commands;
+namespace Drush\Doctor\Commands\deploy;
 
 use Drupal\Core\Update\UpdateRegistry;
+use Drush\Doctor\Commands\ConsoleTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

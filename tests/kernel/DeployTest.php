@@ -6,10 +6,10 @@ namespace Unish;
 
 use Drupal\Core\DrupalKernelInterface;
 use Drupal\KernelTests\KernelTestBase;
-use Drush\Doctor\Commands\DeployCommand;
-use Drush\Doctor\Commands\DeployHookCommand;
-use Drush\Doctor\Commands\DeployHookStatusCommand;
-use Drush\Doctor\Commands\DeployMarkCompleteCommand;
+use Drush\Doctor\Commands\deploy\DeployCommand;
+use Drush\Doctor\Commands\deploy\DeployHookCommand;
+use Drush\Doctor\Commands\deploy\DeployHookStatusCommand;
+use Drush\Doctor\Commands\deploy\DeployMarkCompleteCommand;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;

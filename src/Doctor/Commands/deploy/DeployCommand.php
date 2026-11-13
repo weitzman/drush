@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Drush\Doctor\Commands;
+namespace Drush\Doctor\Commands\deploy;
 
 use Drupal\Core\DrupalKernelInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drush\Doctor\Commands\UpdatedbCommand;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
